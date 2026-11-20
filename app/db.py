@@ -4,12 +4,10 @@ import sqlite3
 import threading
 import time
 
-# Approximate USD per 1M tokens (input, output). Override as pricing changes.
-PRICING: dict[str, tuple[float, float]] = {
-    "gemini-2.0-flash": (0.10, 0.40),
-    "gemini-2.5-flash": (0.30, 2.50),
-    "gemini-2.5-pro": (1.25, 10.00),
-}
+# USD per 1M tokens as (input, output). Models not listed are costed at 0.
+# Fill these in from Google's pricing page, e.g.:
+#   "gemini-3.5-flash": (<input_price>, <output_price>),
+PRICING: dict[str, tuple[float, float]] = {}
 
 
 def estimate_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float:

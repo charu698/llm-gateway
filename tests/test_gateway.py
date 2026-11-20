@@ -7,7 +7,7 @@ from app.providers import MockProvider, Provider, ProviderError
 from app.ratelimit import TokenBucketLimiter
 
 AUTH = {"Authorization": "Bearer test-key"}
-BODY = {"model": "gemini-2.0-flash", "messages": [{"role": "user", "content": "hi"}]}
+BODY = {"model": "gemini-3.5-flash", "messages": [{"role": "user", "content": "hi"}]}
 
 
 class FailingProvider(Provider):

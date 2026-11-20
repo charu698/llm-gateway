@@ -21,14 +21,16 @@ client ──► /v1/chat/completions
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env        # set GEMINI_API_KEY to use real Gemini; empty = mock provider
-export $(grep -v '^#' .env | xargs)
 uvicorn app.main:app --reload
 ```
+
+Then open http://localhost:8000/docs for the interactive Swagger UI
+(click **Authorize**, enter `dev-key-1`, and try `/v1/chat/completions`).
 
 ```bash
 curl -s localhost:8000/v1/chat/completions \
   -H "Authorization: Bearer dev-key-1" -H "Content-Type: application/json" \
-  -d '{"model":"gemini-2.0-flash","messages":[{"role":"user","content":"Hello"}]}'
+  -d '{"model":"gemini-3.5-flash","messages":[{"role":"user","content":"Hello"}]}'
 
 curl -s localhost:8000/v1/stats -H "Authorization: Bearer dev-key-1"
 ```

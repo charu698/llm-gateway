@@ -1,6 +1,8 @@
 import os
 from dataclasses import dataclass, field
 
+from dotenv import load_dotenv
+
 
 def _csv(value: str) -> list[str]:
     return [v.strip() for v in value.split(",") if v.strip()]
@@ -19,6 +21,7 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
+        load_dotenv()  # reads a local .env file if present
         return cls(
             api_keys=_csv(os.getenv("GATEWAY_API_KEYS", "dev-key-1")),
             gemini_api_key=os.getenv("GEMINI_API_KEY", ""),

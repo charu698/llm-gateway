@@ -3,6 +3,7 @@ import time
 from typing import Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Response
+from fastapi.responses import RedirectResponse
 
 from app.cache import ResponseCache, cache_key, is_cacheable
 from app.config import Settings
@@ -32,6 +33,10 @@ def create_app(
         if token not in settings.api_keys:
             raise HTTPException(401, "Invalid API key")
         return hashlib.sha256(token.encode()).hexdigest()[:12]  # never log raw keys
+
+    @app.get("/", include_in_schema=False)
+    def root() -> RedirectResponse:
+        return RedirectResponse("/docs")
 
     @app.get("/health")
     def health() -> dict:

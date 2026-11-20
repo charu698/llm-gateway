@@ -1,0 +1,20 @@
+{
+  "name": "cache_hit_latency_10vu",
+  "requests": 160639,
+  "rps": 5354.4843001869785,
+  "success_rate": 1,
+  "cache_served": 160539,
+  "upstream_calls": 100,
+  "rate_limited": 0,
+  "latency_ms": {
+    "avg": 1.8405778422425354,
+    "p50": 1.641,
+    "p90": 2.112,
+    "p95": 2.305,
+    "p99": 2.733,
+    "max": 214.262
+  },
+  "vus": 10,
+  "duration": "30s",
+  "distinct_prompts": 100
+}

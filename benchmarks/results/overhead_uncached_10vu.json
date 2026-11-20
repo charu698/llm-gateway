@@ -1,0 +1,20 @@
+{
+  "name": "overhead_uncached_10vu",
+  "requests": 1441,
+  "rps": 47.771645038974334,
+  "success_rate": 1,
+  "cache_served": 0,
+  "upstream_calls": 1441,
+  "rate_limited": 0,
+  "latency_ms": {
+    "avg": 209.045201249132,
+    "p50": 208.988,
+    "p90": 211.722,
+    "p95": 213.256,
+    "p99": 225.1648,
+    "max": 234.896
+  },
+  "vus": 10,
+  "duration": "30s",
+  "distinct_prompts": 0
+}

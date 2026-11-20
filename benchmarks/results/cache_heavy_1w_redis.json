@@ -1,0 +1,20 @@
+{
+  "name": "cache_heavy_1w_redis",
+  "requests": 126721,
+  "rps": 4220.534650792315,
+  "success_rate": 1,
+  "cache_served": 126573,
+  "upstream_calls": 148,
+  "rate_limited": 0,
+  "latency_ms": {
+    "avg": 47.30820652456964,
+    "p50": 44.156,
+    "p90": 51.492,
+    "p95": 66.31,
+    "p99": 83.51479999999998,
+    "max": 334.879
+  },
+  "vus": 200,
+  "duration": "30s",
+  "distinct_prompts": 100
+}

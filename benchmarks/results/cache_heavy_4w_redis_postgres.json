@@ -1,0 +1,20 @@
+{
+  "name": "cache_heavy_4w_redis_postgres",
+  "requests": 166740,
+  "rps": 5553.504253190234,
+  "success_rate": 1,
+  "cache_served": 166522,
+  "upstream_calls": 218,
+  "rate_limited": 0,
+  "latency_ms": {
+    "avg": 35.87546904162186,
+    "p50": 28.826,
+    "p90": 53.88930000000001,
+    "p95": 72.775,
+    "p99": 142.3391399999999,
+    "max": 512.882
+  },
+  "vus": 200,
+  "duration": "30s",
+  "distinct_prompts": 100
+}

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Gateway Dashboard</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #151a21; --muted: #667085; --line: #e4e7ec;
+    --accent: #3b6cf6; --ok: #14a06b; --warn: #d9822b; --bad: #d64545; --hit: #14a06b; --miss: #3b6cf6;
+    --shadow: 0 1px 2px rgba(16,24,40,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1116; --card: #171b22; --text: #e8ebf0; --muted: #8b94a3; --line: #262c36;
+      --accent: #6c93ff; --ok: #3ccf96; --warn: #f0a050; --bad: #ff7070; --hit: #3ccf96; --miss: #6c93ff;
+      --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1116; --card: #171b22; --text: #e8ebf0; --muted: #8b94a3; --line: #262c36;
+    --accent: #6c93ff; --ok: #3ccf96; --warn: #f0a050; --bad: #ff7070; --hit: #3ccf96; --miss: #6c93ff;
+    --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+  h1 small { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+  .keybox { display: flex; gap: 8px; align-items: center; }
+  input, textarea, button, select { font: inherit; color: var(--text); background: var(--card);
+         border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  button { cursor: pointer; background: var(--accent); color: #fff; border-color: transparent; font-weight: 600; }
+  button.ghost { background: var(--card); color: var(--text); border-color: var(--line); font-weight: 500; }
+  button:disabled { opacity: .6; cursor: default; }
+  .grid { display: grid; gap: 12px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .kpi .label { color: var(--muted); font-size: 12px; }
+  .kpi .value { font-size: 26px; font-weight: 650; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kpi .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .two { grid-template-columns: 1fr 1fr; margin-bottom: 12px; }
+  @media (max-width: 800px) { .two { grid-template-columns: 1fr; } }
+  h2 { font-size: 13px; margin: 0 0 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  canvas { width: 100% !important; height: 220px !important; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+          border: 1px solid var(--line); font-size: 13px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .dot.closed { background: var(--ok); } .dot.half_open { background: var(--warn); } .dot.open { background: var(--bad); }
+  .bars .row { display: grid; grid-template-columns: 110px 1fr 56px; gap: 10px; align-items: center; margin: 6px 0; font-size: 13px; }
+  .bars .track { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .bars .fill { height: 100%; background: var(--accent); border-radius: 99px; }
+  .bars .num { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .try textarea { width: 100%; min-height: 64px; resize: vertical; }
+  .try .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+  .out { white-space: pre-wrap; border: 1px dashed var(--line); border-radius: 8px; padding: 10px; min-height: 44px; margin-top: 8px; }
+  .meta { color: var(--muted); font-size: 12px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .msg { color: var(--muted); }
+  .err { color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>LLM Gateway <small id="health">connecting…</small></h1>
+    <div class="keybox">
+      <input id="key" type="password" placeholder="Gateway API key" size="22" autocomplete="off">
+      <select id="window" title="Stats window">
+        <option value="">All time</option><option value="5">Last 5 min</option>
+        <option value="60">Last hour</option><option value="1440">Last 24 h</option>
+      </select>
+      <button id="save" class="ghost">Connect</button>
+    </div>
+  </header>
+
+  <div id="notice" class="msg"></div>
+
+  <div class="grid kpis" id="kpis"></div>
+
+  <div class="grid two">
+    <div class="card"><h2>Requests per minute</h2><canvas id="reqChart"></canvas></div>
+    <div class="card"><h2>Latency (ms)</h2><canvas id="latChart"></canvas></div>
+  </div>
+
+  <div class="grid two">
+    <div class="card"><h2>Providers &amp; circuit breakers</h2>
+      <div class="chips" id="circuits"></div>
+      <div class="bars" id="providers" style="margin-top:12px"></div>
+    </div>
+    <div class="card try"><h2>Try it</h2>
+      <textarea id="prompt">Explain what an API gateway does in one sentence.</textarea>
+      <div class="controls">
+        <input id="model" value="gemini-3.5-flash" size="20" aria-label="model">
+        <label><input type="checkbox" id="stream" checked> stream</label>
+        <button id="send">Send</button>
+      </div>
+      <div class="out" id="out"></div>
+      <div class="meta" id="meta"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+$("key").value = store.get("gw_key");
+$("window").value = store.get("gw_window");
+let charts = {};
+
+const auth = () => ({ Authorization: "Bearer " + $("key").value.trim() });
+const fmt = (n, d = 0) => Number(n).toLocaleString(undefined, { maximumFractionDigits: d });
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+function kpi(label, value, sub = "") {
+  return `<div class="card kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`;
+}
+
+function renderStats(s) {
+  $("kpis").innerHTML = [
+    kpi("Requests", fmt(s.total_requests), `${fmt(s.retried_requests)} needed retries`),
+    kpi("Cache hit rate", fmt(s.cache_hit_rate * 100, 1) + "%", `hit p95 ${fmt(s.p95_cache_hit_latency_ms, 1)} ms`),
+    kpi("p95 latency", fmt(s.p95_latency_ms, 1) + " ms", `p50 ${fmt(s.p50_latency_ms, 1)} · p99 ${fmt(s.p99_latency_ms, 1)}`),
+    kpi("Error rate", fmt(s.error_rate * 100, 2) + "%", Object.entries(s.by_status).filter(([c]) => c >= 400).map(([c, n]) => `${c}: ${n}`).join(" · ") || "no errors"),
+    kpi("Tokens", fmt(s.total_tokens), "$" + fmt(s.total_cost_usd, 4) + " est. cost"),
+    kpi("Time to first token", fmt(s.p50_time_to_first_token_ms, 0) + " ms", "streaming, p50"),
+  ].join("");
+  const total = Object.values(s.by_provider).reduce((a, b) => a + b, 0) || 1;
+  $("providers").innerHTML = Object.entries(s.by_provider).sort((a, b) => b[1] - a[1]).map(([name, n]) =>
+    `<div class="row"><span>${name}</span><span class="track"><span class="fill" style="display:block;width:${(n / total) * 100}%"></span></span><span class="num">${fmt(n)}</span></div>`).join("");
+}
+
+function ensureChart(id, config) {
+  if (!window.Chart) return null;
+  if (!charts[id]) charts[id] = new Chart($(id), config);
+  return charts[id];
+}
+
+function renderSeries(series) {
+  const labels = series.map(p => new Date(p.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+  const muted = css("--muted"), line = css("--line");
+  const opts = { responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { labels: { color: muted, boxWidth: 10 } } },
+    scales: { x: { ticks: { color: muted }, grid: { color: line } }, y: { beginAtZero: true, ticks: { color: muted }, grid: { color: line } } } };
+  const req = ensureChart("reqChart", { type: "bar", data: { labels: [], datasets: [] },
+    options: { ...opts, scales: { ...opts.scales, x: { ...opts.scales.x, stacked: true }, y: { ...opts.scales.y, stacked: true } } } });
+  if (req) {
+    req.data.labels = labels;
+    req.data.datasets = [
+      { label: "Cache hits", data: series.map(p => p.cache_hits), backgroundColor: css("--hit") },
+      { label: "Upstream", data: series.map(p => p.requests - p.cache_hits - p.errors), backgroundColor: css("--miss") },
+      { label: "Errors", data: series.map(p => p.errors), backgroundColor: css("--bad") },
+    ];
+    req.update();
+  }
+  const lat = ensureChart("latChart", { type: "line", data: { labels: [], datasets: [] }, options: opts });
+  if (lat) {
+    lat.data.labels = labels;
+    lat.data.datasets = [
+      { label: "avg", data: series.map(p => p.avg_latency_ms), borderColor: css("--accent"), tension: .3, pointRadius: 0 },
+      { label: "p95", data: series.map(p => p.p95_latency_ms), borderColor: css("--warn"), tension: .3, pointRadius: 0 },
+    ];
+    lat.update();
+  }
+}
+
+async function refresh() {
+  if (!$("key").value.trim()) { $("notice").textContent = "Enter a gateway API key and press Connect."; return; }
+  try {
+    const win = $("window").value;
+    const q = win ? `?window_minutes=${win}` : "";
+    const [h, s, t] = await Promise.all([
+      fetch("/health").then(r => r.json()),
+      fetch("/v1/stats" + q, { headers: auth() }),
+      fetch("/v1/stats/timeseries?minutes=" + (win && win < 60 ? 30 : 60), { headers: auth() }),
+    ]);
+    if (s.status === 401) { $("notice").innerHTML = '<span class="err">Invalid API key.</span>'; return; }
+    $("notice").textContent = "";
+    $("health").textContent = `${h.cache} cache · ${h.rate_limiter} limiter · ${h.database}` + (h.semantic_cache ? ` · semantic: ${h.semantic_cache}` : "");
+    $("circuits").innerHTML = h.providers.map(p => `<span class="chip"><span class="dot ${p.circuit}"></span>${p.name} <span class="msg">${p.circuit.replace("_", "-")}</span></span>`).join("");
+    renderStats(await s.json());
+    renderSeries(await t.json());
+  } catch (e) {
+    $("notice").innerHTML = '<span class="err">Cannot reach the gateway.</span>';
+  }
+}
+
+async function send() {
+  const btn = $("send"), out = $("out"), meta = $("meta");
+  btn.disabled = true; out.textContent = ""; meta.textContent = "";
+  const body = { model: $("model").value, temperature: 0, stream: $("stream").checked,
+                 messages: [{ role: "user", content: $("prompt").value }] };
+  const t0 = performance.now();
+  try {
+    const r = await fetch("/v1/chat/completions", { method: "POST", headers: { ...auth(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) { out.innerHTML = `<span class="err">${r.status}: ${(await r.json()).detail || "error"}</span>`; return; }
+    let ttft = null;
+    if (body.stream) {
+      const reader = r.body.getReader(), dec = new TextDecoder(); let buf = "";
+      for (;;) {
+        const { done, value } = await reader.read(); if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let i; while ((i = buf.indexOf("\n\n")) >= 0) {
+          const line = buf.slice(0, i).trim(); buf = buf.slice(i + 2);
+          if (!line.startsWith("data:") || line.includes("[DONE]")) continue;
+          const piece = JSON.parse(line.slice(5)).choices?.[0]?.delta?.content;
+          if (piece) { if (ttft === null) ttft = performance.now() - t0; out.textContent += piece; }
+        }
+      }
+    } else {
+      out.textContent = (await r.json()).choices[0].message.content;
+    }
+    const total = performance.now() - t0;
+    const sim = r.headers.get("X-Cache-Similarity");
+    meta.textContent = `X-Cache: ${r.headers.get("X-Cache")}${sim ? " (similarity " + sim + ")" : ""} · provider: ${r.headers.get("X-Gateway-Provider") || "cache"} · ` +
+      (ttft !== null ? `first token ${fmt(ttft)} ms · ` : "") + `total ${fmt(total)} ms`;
+    refresh();
+  } catch (e) { out.innerHTML = '<span class="err">Request failed.</span>'; }
+  finally { btn.disabled = false; }
+}
+
+$("save").onclick = () => { store.set("gw_key", $("key").value.trim()); store.set("gw_window", $("window").value); refresh(); };
+$("window").onchange = $("save").onclick;
+$("send").onclick = send;
+refresh(); setInterval(refresh, 5000);
+</script>
+</body>
+</html>

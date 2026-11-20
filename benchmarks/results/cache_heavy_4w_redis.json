@@ -1,0 +1,20 @@
+{
+  "name": "cache_heavy_4w_redis",
+  "requests": 108207,
+  "rps": 3603.0383835617777,
+  "success_rate": 1,
+  "cache_served": 108106,
+  "upstream_calls": 101,
+  "rate_limited": 0,
+  "latency_ms": {
+    "avg": 55.39022135351632,
+    "p50": 49.955,
+    "p90": 69.92,
+    "p95": 81.38669999999999,
+    "p99": 162.47281999999913,
+    "max": 409.63
+  },
+  "vus": 200,
+  "duration": "30s",
+  "distinct_prompts": 100
+}

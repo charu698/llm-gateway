@@ -3,5 +3,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .env
-*.db
+*.db*
 .DS_Store
+
+# benchmark scratch
+benchmarks/results/.embedding_cache/
+benchmarks/results/gateway.log
+benchmarks/results/bench.db*

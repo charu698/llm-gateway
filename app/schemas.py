@@ -16,6 +16,7 @@ class ChatRequest(BaseModel):
     messages: list[Message] = Field(min_length=1)
     temperature: Optional[float] = Field(default=None, ge=0, le=2)
     max_tokens: Optional[int] = Field(default=None, gt=0)
+    stream: bool = False
 
 
 class Usage(BaseModel):
@@ -42,3 +43,25 @@ class ChatResponse(BaseModel):
     model: str
     choices: list[Choice]
     usage: Usage
+
+
+# --- streaming (Server-Sent Events) chunk shapes -------------------------------
+
+class DeltaMessage(BaseModel):
+    role: Optional[Literal["assistant"]] = None
+    content: Optional[str] = None
+
+
+class StreamChoice(BaseModel):
+    index: int = 0
+    delta: DeltaMessage
+    finish_reason: Optional[str] = None
+
+
+class ChatChunk(BaseModel):
+    id: str
+    object: Literal["chat.completion.chunk"] = "chat.completion.chunk"
+    created: int
+    model: str
+    choices: list[StreamChoice]
+    usage: Optional[Usage] = None

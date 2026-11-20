@@ -1,0 +1,20 @@
+{
+  "name": "flaky30_retries_and_failover",
+  "requests": 19451,
+  "rps": 644.1304781639735,
+  "success_rate": 1,
+  "cache_served": 0,
+  "upstream_calls": 19451,
+  "rate_limited": 0,
+  "latency_ms": {
+    "avg": 77.17114878412397,
+    "p50": 57.638,
+    "p90": 117.204,
+    "p95": 216.352,
+    "p99": 241.9895,
+    "max": 526.574
+  },
+  "vus": 50,
+  "duration": "30s",
+  "distinct_prompts": 0
+}
